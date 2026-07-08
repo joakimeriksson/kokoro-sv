@@ -1,10 +1,10 @@
 # kokoro-sv
 
-Train a **native Swedish voice for [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M)**
-(StyleTTS2 architecture) — from raw data to a fast, deployable multi-speaker model
-with dynamic prosody and named voices. This repo is **code + downloader scripts
-only**; every weight, dataset, and audio file is `.gitignore`d and fetched or
-regenerated on demand. Trained voices are published to HuggingFace.
+**Swedish voices for [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M)** (StyleTTS2)
+— `pip install kokoro-sv` to speak, or reproduce the whole multi-speaker pipeline that
+made them. Ten named voices with dynamic prosody, a neural Swedish G2P, and a fast
+deployable model. The repo is **code + downloader scripts only**; every weight, dataset,
+and audio file is `.gitignore`d and fetched from HuggingFace or regenerated on demand.
 
 
 ## Install & use (`pip install kokoro-sv`)
@@ -36,7 +36,9 @@ published on HF. See the model cards there.
 ## Repository layout
 
 ```
-.                     README, LICENSE, gpu_run.sh + the import-backbone modules
+.                     README, LICENSE, pyproject.toml, gpu_run.sh + import-backbone modules
+  kokoro_sv/          the pip package — SwedishKokoro API + CLI (vendors the G2P)
+  pyproject.toml      package build config (name = kokoro-sv)
   g2p_sv.py           Swedish G2P adapter (imported everywhere)
   nst_g2p.py          neural G2P entry (SV_NEURAL_G2P=nst_g2p)
   synth_real.py       deployable inference (KModel + notch chain)
@@ -57,25 +59,24 @@ Nothing but code is committed; these steps download/regenerate everything.
 
 ```bash
 # 0. base weights + kikiri recipe + PL-BERT
-bash setup_3090.sh                       # (works on the GB10 too; adjust venv per docs)
+bash scripts/setup_3090.sh                       # (also works on other GPUs; adjust venv per docs)
 
 # 1. data — streamed from HuggingFace, gender-balanced, quality-gated
-cd pipeline
-python scripts/prepare_dataset.py nst          --gender Male   --max-hours 5
-python scripts/prepare_dataset.py nst          --gender Female --max-hours 5
-python scripts/prepare_dataset.py tts_swedish                  --max-hours 5
-python scripts/extract_prosody.py --manifest data/manifests/nst.jsonl
-python scripts/build_mix.py                     # configs/datasets.yaml
+python training/scripts/prepare_dataset.py nst          --gender Male   --max-hours 5
+python training/scripts/prepare_dataset.py nst          --gender Female --max-hours 5
+python training/scripts/prepare_dataset.py tts_swedish                  --max-hours 5
+python training/scripts/extract_prosody.py --manifest training/data/manifests/nst.jsonl
+python training/scripts/build_mix.py                     # training/configs/datasets.yaml
 
 # 2. train the multi-speaker base (StyleTTS2 via kikiri; smoke first!)
-python scripts/train_kokoro.py --manifest data/manifests/train_mix.jsonl --name base --smoke --launch
-python scripts/train_kokoro.py --manifest data/manifests/train_mix.jsonl --name base --launch
+python training/scripts/train_kokoro.py --manifest training/data/manifests/train_mix.jsonl --name base --smoke --launch
+python training/scripts/train_kokoro.py --manifest training/data/manifests/train_mix.jsonl --name base --launch
 
 # 3. evaluate EVERY checkpoint (never pick on loss alone)
-python scripts/eval_base.py                     # ASR-CER + DNSMOS + comb + prosody-responsiveness
+python training/scripts/eval_base.py             # ASR-CER + DNSMOS + comb + prosody-responsiveness
 
 # 4. build a HuggingFace voice pack from chosen speakers
-python scripts/build_hf_pack.py "Signe,Astrid,…,Björn,Sven,…"
+python training/scripts/build_hf_pack.py "Signe,Astrid,…,Björn,Sven,…"
 ```
 
 Alternatively, `data-gen/` synthesizes a clean single-speaker corpus with
