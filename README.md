@@ -6,6 +6,21 @@ with dynamic prosody and named voices. This repo is **code + downloader scripts
 only**; every weight, dataset, and audio file is `.gitignore`d and fetched or
 regenerated on demand. Trained voices are published to HuggingFace.
 
+
+## Install & use (`pip install kokoro-sv`)
+
+```bash
+pip install kokoro-sv
+```
+```python
+from kokoro_sv import SwedishKokoro
+tts = SwedishKokoro()                              # downloads model + G2P from HF, cached
+tts.speak("Hej, jag är CandyTron!", voice="Stina", out="hej.wav")
+print(tts.voices)                                  # Alice, Elsa, ... Björn, Nils, ...
+tts.speak("God morgon!", voice=tts.blend("Björn", "Nils", 0.7), out="mix.wav")
+```
+Or the CLI: `kokoro-sv speak "Hej" --voice Stina` · `kokoro-sv voices`.
+
 ## What's here
 
 | result | |

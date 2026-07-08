@@ -60,3 +60,8 @@ data-gen/output/
 
 # generated per-run training configs (train_kokoro.py regenerates from template)
 training/configs/train_*.yml
+
+# python build artifacts
+dist/
+build/
+*.egg-info/
