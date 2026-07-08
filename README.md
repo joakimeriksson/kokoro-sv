@@ -23,7 +23,7 @@ published on HF. See the model cards there.
 ```
 .                     recipe core: G2P, configs, inference (synth_real.py), weight conversion
   g2p/                neural Swedish G2P (code; model+lexicon auto-download from HF)
-  pipeline/           reproducible multi-speaker pipeline (was: kokoro-se)
+  training/           reproducible multi-speaker pipeline (was: kokoro-se)
     src/kokoro_se/    manifest, text-normalization, prosody, quality-filter
     scripts/          download/prepare data, train, evaluate, build voice packs
     configs/          dataset mix, test set, voice names, training configs

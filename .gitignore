@@ -52,11 +52,11 @@ mood_*/
 # large regenerable corpora (derived from public TTS-Swedish; regen via split_corpus.py)
 data-gen/corpus_sv*.txt
 data-gen/corpus_v3_*.txt
-pipeline/data/
-pipeline/outputs/
-pipeline/.venv/
+training/data/
+training/outputs/
+training/.venv/
 data-gen/dataset*/
 data-gen/output/
 
 # generated per-run training configs (train_kokoro.py regenerates from template)
-pipeline/configs/train_*.yml
+training/configs/train_*.yml
