@@ -35,7 +35,8 @@ DNSMOS_GATE = 2.5
 ASR_SR = 16000
 POLY_OVR = np.poly1d([-0.06766283, 1.11546468, 0.04602535])
 DNSMOS_WIN = int(9.01 * ASR_SR)
-QC_ONNX = "/home/joakim/work/ai-smarthome/swedish-chatterbox/qc/sig_bak_ovr.onnx"
+from pathlib import Path as _P
+QC_ONNX = str(_P(__file__).resolve().parent / "data" / "sig_bak_ovr.onnx")
 
 
 def norm_text(s: str) -> str:

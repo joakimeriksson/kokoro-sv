@@ -57,3 +57,6 @@ pipeline/outputs/
 pipeline/.venv/
 data-gen/dataset*/
 data-gen/output/
+
+# generated per-run training configs (train_kokoro.py regenerates from template)
+pipeline/configs/train_*.yml
