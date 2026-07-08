@@ -49,3 +49,11 @@ mood_*/
 
 # editor/agent config
 .claude/
+# large regenerable corpora (derived from public TTS-Swedish; regen via split_corpus.py)
+data-gen/corpus_sv*.txt
+data-gen/corpus_v3_*.txt
+pipeline/data/
+pipeline/outputs/
+pipeline/.venv/
+data-gen/dataset*/
+data-gen/output/

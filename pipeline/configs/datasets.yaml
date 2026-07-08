@@ -1,0 +1,20 @@
+# Dataset mix for training-manifest builds (scripts via `kokoro-se build-mix`).
+# Weights are fractions of the TOTAL target hours, applied per dataset manifest.
+# Start config from the project plan; own_voice stays 0 until recordings exist.
+
+target_hours: 11.0
+
+mix:                 # Fas 1 lite (2026-07-07): coverage over volume
+  nst: 0.50          # phonetic breadth, ~30 speakers
+  tts_swedish: 0.50  # LibriVox audiobook prosody, 7-9 speakers, has questions
+  css10_sv: 0.0      # escalation menu — enable only if prosody-response test shows a gap
+  common_voice_sv: 0.0
+  rixvox: 0.0
+  own_voice: 0.0
+
+# selection preferences inside each dataset (uses prosody fields when present)
+selection:
+  prefer_prosody_classes: ["frågande", "expressiv", "energisk"]  # oversample 2x
+  min_quality_score: 0.5
+  max_clip_sec: 12
+  min_clip_sec: 1.5

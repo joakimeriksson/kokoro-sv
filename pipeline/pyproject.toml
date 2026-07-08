@@ -1,0 +1,28 @@
+[project]
+name = "kokoro-se"
+version = "0.1.0"
+description = "Reproducible Swedish Kokoro training pipeline with prosody focus"
+requires-python = ">=3.11"
+dependencies = [
+    "click",
+    "pyyaml",
+    "numpy",
+    "soundfile",
+    "librosa",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+# quality filtering + eval need the heavy stack (installed in a CUDA venv)
+quality = ["torch", "transformers", "onnxruntime"]
+datasets = ["pyarrow", "fsspec", "aiohttp", "requests"]
+
+[project.scripts]
+kokoro-se = "kokoro_se.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kokoro_se"]

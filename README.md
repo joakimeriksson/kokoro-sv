@@ -1,158 +1,86 @@
-# swedish-kokoro — training a Swedish voice for Kokoro-82M
+# swedish-kokoro
 
-Fine-tunes [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (StyleTTS2
-architecture, Apache-2.0 weights) to **speak native Swedish** — the language
-Kokoro ships without. Sister project to [`swedish-tts`](../swedish-tts) (Piper);
-uses the TTS-Swedish data layout and a **neural G2P** hook.
+Train a **native Swedish voice for [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M)**
+(StyleTTS2 architecture) — from raw data to a fast, deployable multi-speaker model
+with dynamic prosody and named voices. This repo is **code + downloader scripts
+only**; every weight, dataset, and audio file is `.gitignore`d and fetched or
+regenerated on demand. Trained voices are published to HuggingFace.
 
-> 📓 **[RUN1.md](RUN1.md)** — full end-to-end account of the first real run:
-> Chatterbox-distilled data, the two-stage training + OOM crash, the echo/ending-hum
-> diagnosis, and the shipped voice in [`deploy/`](deploy/). This README below is the
-> setup/architecture reference; RUN1 is what actually happened.
+## What's here
 
-
-## Reproduce (code + downloaders — no data in git)
-
-This repo is **code and downloader scripts only**; all weights, datasets, wavs and
-checkpoints are `.gitignore`d and fetched/regenerated on demand:
-
-| what | how |
+| result | |
 |---|---|
-| base Kokoro-82M weights + kikiri recipe + PL-BERT | `bash setup_3090.sh` |
-| neural Swedish G2P model + lexicon | auto-downloads from HF `Joakim/swedish-kokoro` |
-| training data (NST, LibriVox) | streamed from HF `KTH/nst` / `datadriven-company/TTS-Swedish` by the prepare scripts |
-| synthetic data (Chatterbox) | `../swedish-chatterbox/batch_synth.py` regenerates it |
-| trained voices | published to HF (see model cards) |
+| **Multi-speaker Swedish base** | one model, 22+ real Swedish speakers, **prosody-responsive** (the style vector genuinely steers delivery: 4.9→9.5 semitone range on demand) |
+| **10-voice pack** | 5 female + 5 male named voicepacks (512 KB each), interpolatable |
+| **Neural Swedish G2P** | hybrid NST-lexicon + transformer, with a growing tech/brand lexicon (MQTT, RISE, YOLO, …) |
+| **Reproducible pipeline** | dataset loaders, manifest format, prosody QC battery, training bridge, evaluation |
 
-A fresh clone is a few MB; the scripts pull everything else.
+Voices are distilled/trained from **CC0 sources** (NST + Swedish LibriVox) and
+published on HF. See the model cards there.
 
-## Why this is feasible (all blockers checked, June 2026)
+## Repository layout
 
-| Dependency | Status |
-|---|---|
-| **Swedish PL-BERT** | ✅ Swedish (`sv`) is in [`papercup-ai/multilingual-pl-bert`](https://huggingface.co/papercup-ai/multilingual-pl-bert)'s 15-language set — no need to train one |
-| **Training recipe** | ✅ [`semidark/kikiri-tts`](https://github.com/semidark/kikiri-tts) (a.k.a. kokoro-deutsch) — first public Kokoro new-language recipe (German); we adapt German→Swedish |
-| **G2P** (the usual hard part) | ⚠️ must be wired before real training — use `SV_NEURAL_G2P`; espeak-ng `sv` is only a pipeline smoke fallback |
-| **Data** | ✅ `datadriven-company/TTS-Swedish` layout: `wavs/` + `speakers.csv` with speaker and DNSMOS metadata |
-| **Compute** | ✅ recipe needs 10 GB+ VRAM; the **RTX 3090 (24 GB)** runs batch 8–16 |
-
-> Note: Kokoro's official *training* code was never released — this works because
-> the community kikiri recipe reproduced it on the StyleTTS2 base.
-
-### The real gotcha: phoneme vocab (this is what sank attempt #1)
-Kokoro's `config.json` defines **114 symbols mapped onto SPARSE ids inside a
-178-slot embedding space** (`n_token: 178`; e.g. `a`=43, `ʂ`=130, `ː`=158). Both
-numbers are real — 178 embedding slots, 114 populated. StyleTTS2's default
-`TextCleaner` builds a *dense* `0..N` map → **wrong ids → NaN losses**. Fix:
-`kokoro_symbols.py`, generated from the authoritative `config.json`, wired into
-`StyleTTS2/text_utils.py` by `setup_3090.sh`.
-
-Swedish espeak `sv` emits exactly **two** out-of-vocab symbols, remapped in
-`g2p_sv.py` to in-vocab central vowels Swedish doesn't otherwise use:
-`ʉ → ɨ` (101), `ɵ → ɜ` (87). `prepare_data.py` / `TextCleaner` **fail loudly** on
-anything unmapped. This makes espeak usable for plumbing tests, not for the
-target voice quality.
-
-### Post-mortem of attempt #1 — fixed in this version
-| Was broken | Fix |
-|---|---|
-| Validated vs `kokoro-onnx` (wrong vocab), dense ids | `kokoro_symbols.py` reproduces `config['vocab']` exactly |
-| `ɵ→ʉ` remap (ʉ also missing); `ʉ` unhandled | `ʉ→ɨ`, `ɵ→ɜ` (verified in-vocab) |
-| `config_sv.yml` missing `model_params` | full Kokoro-matching `model_params` |
-| Loaded raw `kokoro-v1_0.pth` (no warm start) | `convert_weights.py` → `kokoro_base.pth` |
-| `train.sh` ran `python` from wrong dir | `accelerate launch` from `recipe/StyleTTS2/` |
-| No `monotonic_align` / `OOD_texts.txt` / smoke test | added to setup / prepare_data / `--smoke` |
-
-### Gated workflow (verify cheap before burning GPU)
-1. **Mac, free:** `pixi run verify-prep` — symbol map + config + G2P coverage
-2. **3090:** `bash setup_3090.sh` — recipe, weight conversion, symbol wiring, monotonic_align
-3. **Data:** `export SV_NEURAL_G2P=g2p.nst_g2p && python prepare_data.py --raw data/swedish_raw --speaker auto --g2p neural`
-4. **Smoke (minutes):** `bash train_3090.sh --smoke` — losses must be finite & in range
-5. **Train:** `bash train_3090.sh` — Stage 1 (mel 0.8→0.25) → Stage 2 (**start ~0.43, not 7.5**) → voicepack
-
-## Layout
-
-| File | Role | Runs on |
-|---|---|---|
-| `verify_prep.py` | **Mac preflight** — symbol map + config + G2P coverage gates | Mac |
-| `kokoro_symbols.py` | authoritative 178-slot / 114-symbol vocab + `TextCleaner` (the fix) | Mac + GPU |
-| `convert_weights.py` | raw `kokoro-v1_0.pth` → warm-start `kokoro_base.pth` | RTX 3090 |
-| `g2p_sv.py` | Swedish G2P (neural → explicit espeak fallback) + Kokoro-vocab validator | Mac + GPU |
-| `prepare_data.py` | TTS-Swedish `speakers.csv` → 24 kHz wavs + StyleTTS2 filelists (`path\|IPA\|speaker`) | GPU box (data lives there) |
-| `config_sv.yml` | two-stage fine-tune config (warm-start from base Kokoro + Swedish PL-BERT) | GPU box |
-| `setup_3090.sh` | clone kikiri recipe, env, download PL-BERT + base Kokoro | RTX 3090 |
-| `train_3090.sh` | Stage 1 → Stage 2 → voicepack extraction | RTX 3090 |
-| `extract_voicepack.py` | trained checkpoint → Kokoro voicepack tensor | RTX 3090 |
-| `pixi.toml` | Mac mirror env (G2P + vocab checks, no GPU) | Mac |
-
-## Plug in your neural G2P
-
-`g2p_sv.py` auto-loads it if importable. Point it at your module:
-
-```bash
-export SV_NEURAL_G2P=nst_g2p     # module exposing phonemize(text)->IPA, or a G2P class
+```
+.                     recipe core: G2P, configs, inference (synth_real.py), weight conversion
+  g2p/                neural Swedish G2P (code; model+lexicon auto-download from HF)
+  pipeline/           reproducible multi-speaker pipeline (was: kokoro-se)
+    src/kokoro_se/    manifest, text-normalization, prosody, quality-filter
+    scripts/          download/prepare data, train, evaluate, build voice packs
+    configs/          dataset mix, test set, voice names, training configs
+  data-gen/           Chatterbox teacher — synthesize single-speaker data (was: swedish-chatterbox)
+  docs/               training-recipe.md (detailed), RUN1.md, PLAN.md
+  gpu_run.sh          flock wrapper — ONE compute job at a time (see Lessons)
 ```
 
-For real training, `prepare_data.py` defaults to `--g2p neural` and aborts if it
-cannot import that module. Use `--g2p espeak` only for plumbing tests.
+## Reproduce, end to end
+
+Nothing but code is committed; these steps download/regenerate everything.
 
 ```bash
-pixi run verify-prep             # checks symbols/config and the local G2P path
+# 0. base weights + kikiri recipe + PL-BERT
+bash setup_3090.sh                       # (works on the GB10 too; adjust venv per docs)
+
+# 1. data — streamed from HuggingFace, gender-balanced, quality-gated
+cd pipeline
+python scripts/prepare_dataset.py nst          --gender Male   --max-hours 5
+python scripts/prepare_dataset.py nst          --gender Female --max-hours 5
+python scripts/prepare_dataset.py tts_swedish                  --max-hours 5
+python scripts/extract_prosody.py --manifest data/manifests/nst.jsonl
+python scripts/build_mix.py                     # configs/datasets.yaml
+
+# 2. train the multi-speaker base (StyleTTS2 via kikiri; smoke first!)
+python scripts/train_kokoro.py --manifest data/manifests/train_mix.jsonl --name base --smoke --launch
+python scripts/train_kokoro.py --manifest data/manifests/train_mix.jsonl --name base --launch
+
+# 3. evaluate EVERY checkpoint (never pick on loss alone)
+python scripts/eval_base.py                     # ASR-CER + DNSMOS + comb + prosody-responsiveness
+
+# 4. build a HuggingFace voice pack from chosen speakers
+python scripts/build_hf_pack.py "Signe,Astrid,…,Björn,Sven,…"
 ```
 
-## Run
+Alternatively, `data-gen/` synthesizes a clean single-speaker corpus with
+Chatterbox (the RUN1 distillation path) — see `data-gen/README.md`.
 
-### On the Mac (prep + sanity only)
-```bash
-pixi run verify-prep
-# data lives on the GPU box; install espeak-ng separately if using local espeak checks
-```
+## Hard-won lessons (baked into the code)
 
-### On the RTX 3090 (WSL2 Ubuntu)
-```bash
-bash setup_3090.sh                              # recipe + PL-BERT + base weights
-export SV_NEURAL_G2P=g2p.nst_g2p                 # use the good G2P
-# put TTS-Swedish data in data/swedish_raw/{wavs/,speakers.csv}
-python prepare_data.py --raw data/swedish_raw --speaker auto --g2p neural --val 200
-bash train_3090.sh                               # Stage 1 → Stage 2 → voicepack
-```
+1. **One compute job at a time.** The GB10 has unified CPU+GPU memory; two heavy
+   jobs hard-froze it. Everything runs through `gpu_run.sh` (kernel `flock`).
+2. **Never rank a checkpoint on one metric.** Gate on ASR-CER (intelligibility) →
+   DNSMOS (quality) → artifact metrics. A comb-optimized checkpoint was unintelligible.
+3. **Validate the corpus against downstream filters** before bulk generation
+   (35 % of an early corpus exceeded the 12 s training cap = wasted GPU).
+4. **Prosody lives in the style vector** ([128 timbre | 128 prosody]); train on many
+   real speakers so the predictor learns to *use* it — single-speaker distillation is flat.
+5. **The GAN/adversarial stage is needed** for decoder quality (with enough data);
+   low decoder-lr prevents the fine-tune upsampler-tone artifacts (notched at inference).
 
-Output: `output/sv_kokoro.voicepack.pt` — copy it anywhere (Mac, Pi) and run
-Kokoro inference with your Swedish G2P. Then A/B it against the Piper voice with
-the same harness used in `gemma4stt`.
+## Credits
 
-## Bring it back to the Mac for testing
-
-On the 3090, training produces everything under `output/`. Pull only what
-inference needs (the ⚠️ G2P is the one people forget — inference must phonemize
-**identically** to training or the voice sounds broken):
-
-| Artifact | From | Why |
-|---|---|---|
-| `sv_kokoro.model.pth` | `output/` | KModel-compatible weights; export step must be wired to the cloned kikiri recipe |
-| `sv_kokoro.voicepack.pt` | `output/` | per-voice style vectors Kokoro needs at inference |
-| neural G2P (model + lexicon) ⚠️ | `g2p/` | must match training's phonemization exactly |
-| `config_sv.yml` + vocab | repo | sample rate (24 kHz) + token map |
-| 3–5 held-out clips | `data/refs/` | honest A/B vs the Piper voice |
-
-```bash
-# on the Mac:
-HOST=user@3090-box bash fetch_from_3090.sh      # rsyncs the above into ./voices, ./g2p
-export SV_NEURAL_G2P=g2p.nst_g2p                 # use the fetched neural G2P
-pixi run python test_voice.py --text "Hej, det här är min nya svenska röst."
-afplay output/sv_kokoro_test.wav
-```
-
-Once `test_voice.py` sounds right, plug this voice into the **streaming Gemma
-loop** in `../gemma4stt`: add a Kokoro backend to `streaming_tts.py:StreamingSpeaker`
-(swap Piper's `voice.synthesize()` for the KModel call) so the spoken assistant
-uses the trained Swedish Kokoro voice. Alternatively, export the model to ONNX on
-the 3090 and it drops straight into the existing `kokoro-onnx` path on the Mac.
-
-## Status / TODO
-- [x] Feasibility verified (PL-BERT, recipe, G2P, data, compute)
-- [x] Kokoro sparse vocab validation working
-- [x] Data-prep + config + GPU scripts scaffolded
-- [ ] Wire the neural G2P module (`SV_NEURAL_G2P`) on the GPU box
-- [ ] Wire exact kikiri voicepack + KModel export APIs after clone
-- [ ] Stage-1 smoke run before the full fine-tune
+Built on [hexgrad/Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0),
+[yl4579/StyleTTS2](https://github.com/yl4579/StyleTTS2) (MIT), and
+[semidark/kikiri-tts](https://github.com/semidark/kikiri-tts). Data: NST
+([Språkbanken](https://www.nb.no/sprakbanken/), CC0) and Swedish LibriVox
+([TTS-Swedish](https://huggingface.co/datasets/datadriven-company/TTS-Swedish), CC0).
+Evaluation: [KBLab VoxRex](https://huggingface.co/KBLab/wav2vec2-large-voxrex-swedish)
++ Microsoft DNSMOS. Data manufactured with [Chatterbox](https://github.com/resemble-ai/chatterbox) (MIT).
