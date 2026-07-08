@@ -43,7 +43,7 @@ provenansen och mätvärdena.
 > om prosodiresponstestet (Fas 2) visar ett uppmätt gap. Full lista nedan är
 > eskaleringsmenyn, inte startplanen.
 
-1. **NST full**: `kokoro-se prepare --dataset nst --max-hours 20` (streamning
+1. **NST full**: `python training/scripts/prepare_dataset.py --dataset nst --max-hours 20` (streamning
    funkar, verifierad). ~100 talare, neutral men äkta prosodi. Kvalitetsbatteri på allt.
 2. **CSS10 Swedish** (~10 h, en talare, berättande audiobook-prosodi): ladda ner
    Kaggle-zip, `prepare --dataset css10`.
@@ -62,7 +62,7 @@ provenansen och mätvärdena.
 Mål: ≥ 30 h batteri-godkänt, ≥ 50 talare, prosodiklasser täckta (frågande,
 expressiv, långsam, snabb — inte bara neutral).
 
-## Fas 2 — Multi-speaker basträning ("kokoro-se-base")
+## Fas 2 — Multi-speaker basträning ("kokoro-sv-base")
 
 1. **Smoke först** (RUN2-disciplin): `multispeaker: true` i StyleTTS2-configen är
    OPRÖVAT i vår kikiri-miljö — 1 epok på 50 klipp × 5 talare; finita losses,
@@ -77,7 +77,7 @@ expressiv, långsam, snabb — inte bara neutral).
    utsignalen. Responsen = hur mycket stilvektorn styr prosodin. Basen är lyckad
    när frågeintonation stiger, utrop lyfter och lugna talares packs saktar tempot.
 
-## Fas 3 — Prosodifintuning ("kokoro-se-prosody")
+## Fas 3 — Prosodifintuning ("kokoro-sv-prosody")
 
 - Urval via manifest: prosodiklasserna frågande/expressiv/energisk översamplade,
   RixVox-segment med hög F0-varians, långa meningar med naturliga pauser.
@@ -92,7 +92,7 @@ Nu är rösterna bara voicepacks — och vi kan välja källa:
   finns redan i korpusen. Ovanpå en stark bas räcker det ofta för adaptering —
   och då är Chatterbox HELT ute ur kedjan (ingen lärar-flathet, ingen distillering).
 - **Alternativ B: egen inspelning 1–2 h** (bokläsning + frågor + utrop + siffror
-  + teknikord) för en "kokoro-se-joakim"-röst. Active-learning-verktyget (§10 i
+  + teknikord) för en "kokoro-sv-joakim"-röst. Active-learning-verktyget (§10 i
   huvudplanen) genererar inspelningspaketen.
 - Mood-packs v3: extrahera om känslopaketen mot den breda basen — bör nu ligga
   inom manifolden (ingen DNSMOS-dipp).

@@ -1,5 +1,8 @@
 # swedish-kokoro deployable voice (sv_female)
 
+> **Legacy (RUN1).** This is the first single-speaker female voice. The current
+> multi-speaker pack with 10 named voices is at HF `Joakim/kokoro-sv-voices` — see the root README.
+
 Best checkpoint from run #1: **epoch_2nd_00002** (PRE-adversarial — the Stage-2
 adversarial/SLM epoch injects the 25 ms comb, so we stop before it). EOS-tail
 trimming removes the trailing low-frequency hum.

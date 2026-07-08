@@ -1,48 +1,43 @@
-# Mac quickstart — running the Swedish + multilingual Kokoro voice
+# Mac quickstart — Swedish Kokoro voices
 
-Handoff note (the repo travels between machines; the agent memory does not). Goal:
-run `deploy/`'s voice on a Mac. Weights auto-download from HuggingFace
-**`Joakim/swedish-kokoro`** (public). `config.json` + `sv_female.pt` are already in
-`deploy/` in this repo; only the big `.pth`/`.onnx` come from HF.
+Run the published voices on a Mac (Apple Silicon or Intel). Everything downloads
+from HuggingFace on first run — no training, no local data.
 
-## Setup
 ```bash
+git clone https://github.com/joakimeriksson/kokoro-sv.git
+cd kokoro-sv
 python3 -m venv .venv && source .venv/bin/activate
-pip install kokoro torch soundfile huggingface_hub numpy onnxruntime misaki
-brew install espeak-ng         # Swedish + several languages' G2P
-```
-Note: `recipe/` is NOT checked out on the Mac (gitignored) — that's fine, the code
-falls back to the pip-installed `kokoro` package.
+pip install kokoro huggingface_hub torch scipy soundfile
+export SV_NEURAL_G2P=nst_g2p
 
-## Run (PyTorch — best on Apple Silicon)
-```python
-from kokoro_svml import KokoroSVML
-import soundfile as sf
-tts = KokoroSVML()                                  # first run downloads weights from HF
-sf.write("sv.wav", tts.generate("Hej, jag pratar svenska!", lang="sv"), 24000)
-sf.write("en.wav", tts.generate("And English too.",          lang="en"), 24000)
+python examples/speak.py --voice Stina --text "Hej från min Mac!"
+afplay out.wav
 ```
 
-## Run (ONNX — torch-free / CPU)
+Then try:
+
 ```bash
-python onnx_example.py --text "Hej från ONNX på Mac."
+python examples/list_voices.py                       # render all 10 voices
+python examples/swedish_with_french_voice.py         # Swedish words, French voice 🇫🇷
+python examples/blend_voices.py --a Björn --b Nils --mix 0.7
 ```
 
-## G2P
-- **Neural G2P is the default and self-contained.** The code is vendored in
-  `g2p/`; the model + lexicon auto-download from HF (`Joakim/swedish-kokoro` under
-  `g2p/`) on first use and cache. It needs `torch` (already a dep) — no need to copy
-  anything from `swedish-tts`. Correct loanword/name pronunciation (godis, robot,
-  Candytron) vs espeak.
-- **espeak is the automatic fallback** — if HF is unreachable or torch is missing,
-  it falls back to espeak `sv` (needs `brew install espeak-ng`) with a clear log
-  line. Force espeak with `SV_NEURAL_G2P=` (empty) if you want the light path.
+## Where things come from
 
-## Gotchas
-- **Text normalization is the caller's job** — numbers/Roman numerals aren't
-  normalized (e.g. capitalized "Vi" → "VI" = 6 = "sex" in espeak). Lowercase or
-  pre-normalize if you hit it.
-- **No MLX port** of this model — use PyTorch (CPU/MPS) or the ONNX path. Apple
-  Silicon: torch with MPS is the simplest fast option.
-- Quality: Swedish is TTS-distilled with a faint residual decoder comb; English/etc.
-  inherited from base Kokoro. See `RUN1.md` for the full story.
+| what | source |
+|---|---|
+| Swedish model + 10 voices + config | HF `Joakim/kokoro-sv-voices` |
+| neural Swedish G2P (model + lexicon) | HF `Joakim/swedish-kokoro`, auto-downloaded |
+| model architecture | `hexgrad/Kokoro-82M` (class only; our weights override) |
+
+## Notes
+
+- **No CUDA needed** — falls back to CPU; Kokoro-82M is tiny, so it's fast.
+- **`misaki` installs fine on Mac** (unlike aarch64 Linux) — plain `pip install kokoro` works.
+- If the neural G2P ever hiccups, `brew install espeak-ng` gives it a fallback.
+- Voices: **Alice, Elsa, Ebba, Stina, Greta** (female) · **Björn, Lars, Nils, Anton, Oskar** (male).
+  Males are a touch soft on this v1 base (training data was female-heavy); a
+  gender-balanced v2 is the planned improvement.
+
+Coming soon: `pip install kokoro-sv` for a one-line API (`SwedishKokoro().speak(...)`)
+instead of the example scripts.

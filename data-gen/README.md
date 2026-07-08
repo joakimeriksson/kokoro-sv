@@ -1,9 +1,9 @@
-# swedish-chatterbox — synthesizing a clean Swedish dataset to train Kokoro
+# data-gen — synthesizing a clean Swedish dataset to train Kokoro
 
 This project exists to **manufacture training data**. It uses **Chatterbox
 Multilingual** (`language_id="sv"`) to synthesize a clean, single-speaker female
 Swedish corpus, which is then distilled into a fast **Kokoro-82M** voice over in
-[`../swedish-kokoro`](../swedish-kokoro). This is **TTS distillation**: a big, slow,
+[`..`](..). This is **TTS distillation**: a big, slow,
 high-quality teacher (Chatterbox) generates the dataset for a small, fast student
 (Kokoro).
 
@@ -77,10 +77,10 @@ extend later (it skips already-synthesized indices).
 
 ## Where it goes next
 
-`dataset/` feeds Kokoro training: `prepare_data.py --raw ../swedish-chatterbox/dataset
+`dataset/` feeds Kokoro training: `prepare_data.py --raw ../data-gen/dataset
 --speaker auto --speaker-label 0 --g2p neural --val 100`. The full run #1 story
 (training, crash, artifact diagnosis, deployable voice) is in
-[`../swedish-kokoro/RUN1.md`](../swedish-kokoro/RUN1.md).
+[`../RUN1.md`](../RUN1.md).
 
 > Note for that pipeline: the Chatterbox audio is **clean** — the echo/comb
 > artifact found in the Kokoro output is introduced by Kokoro's decoder/adversarial
