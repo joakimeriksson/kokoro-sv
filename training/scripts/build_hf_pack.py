@@ -32,6 +32,11 @@ import os
 os.environ.setdefault("SV_NEURAL_G2P", "nst_g2p")
 from synth_real import convert_checkpoint
 convert_checkpoint(str(CKPT), str(PACK / "kokoro_sv.pth"))
+# CRITICAL: convert to STOCK format so `pip install kokoro` loads the decoder
+# (recipe format uses new weight-norm API + module. prefix -> stock drops it -> noise)
+import subprocess as _sp
+_sp.run([sys.executable, str(SK / "convert_to_stock.py"), "--in", str(PACK / "kokoro_sv.pth"),
+         "--out", str(PACK / "kokoro_sv.pth")], check=True)
 shutil.copy(SK / "recipe" / "training" / "config.json", PACK / "config.json")
 
 # 2. gather voicepacks + samples for the chosen names
