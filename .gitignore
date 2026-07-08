@@ -1,0 +1,51 @@
+# pixi environments
+.pixi/
+__pycache__/
+config_sv.smoke.yml
+
+# fetched/trained artifacts and data (live on the 3090 box / downloaded)
+voices/
+output/
+data/
+recipe/
+models/
+
+# g2p/ holds the vendored neural-G2P CODE (tracked); its big runtime artifacts
+# auto-download from HF (Joakim/swedish-kokoro under g2p/) — keep those out of git.
+g2p/g2p_model.pt
+g2p/g2p_model_snapshot.pt
+g2p/lexicon.tsv
+g2p/__pycache__/
+
+# temporary audio
+*.wav
+
+# run logs
+*.log
+
+# large model weights — host on HuggingFace / Git LFS, NOT plain git (>100 MB).
+# deploy/README.md, config.json, sv_female.pt (512 K) ARE tracked.
+deploy/*.pth
+deploy/*.onnx
+
+# --- session data/artifacts (2026-07: keep code, exclude everything heavy) ---
+data_*/
+raw_*/
+hf_bundle/
+hf_pack/
+.venv/
+*.pt
+!deploy/sv_female.pt
+*.parquet
+*.tar
+ravdess*/
+sweep_*/
+listen_*/
+joint*/
+mv3_*/
+surgery_*/
+v3_e*/
+mood_*/
+
+# editor/agent config
+.claude/
