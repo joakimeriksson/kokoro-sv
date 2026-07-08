@@ -96,6 +96,15 @@ class SwedishKokoro:
         va, vb = self._load_voice(a), self._load_voice(b)
         return mix * va + (1 - mix) * vb
 
+    def kokoro_voice(self, name: str, repo: str = KOKORO_BASE):
+        """Borrow any voice from base Kokoro-82M — Swedish words, foreign voice, for fun.
+
+            tts.speak("Hej!", voice=tts.kokoro_voice("ff_siwis"))   # French 🇫🇷
+            # if_sara = Italian, jf_alpha = Japanese, ...
+        """
+        p = self._hf(repo, f"voices/{name}.pt")
+        return self._torch.load(p, map_location=self.device, weights_only=True)
+
     # -- synthesis -----------------------------------------------------------
     def synthesize(self, text: str, voice="Stina", speed: float = 1.0) -> np.ndarray:
         """Return 24 kHz float32 audio. `voice` is a name or a voicepack tensor."""
