@@ -7,6 +7,7 @@ comes out intelligible, multilingual+Swedish is free.
 
   uv --project recipe run --no-sync python base_swedish.py
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))  # repo root on path
 import sys
 from pathlib import Path
 

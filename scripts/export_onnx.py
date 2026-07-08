@@ -8,6 +8,7 @@ language-blind), so this graph just maps (input_ids, ref_s) -> audio.
 
   uv --project recipe run --no-sync python export_onnx.py
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))  # repo root on path
 import sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent

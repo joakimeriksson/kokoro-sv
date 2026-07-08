@@ -21,15 +21,19 @@ published on HF. See the model cards there.
 ## Repository layout
 
 ```
-.                     recipe core: G2P, configs, inference (synth_real.py), weight conversion
-  g2p/                neural Swedish G2P (code; model+lexicon auto-download from HF)
-  training/           reproducible multi-speaker pipeline (was: kokoro-se)
-    src/kokoro_se/    manifest, text-normalization, prosody, quality-filter
-    scripts/          download/prepare data, train, evaluate, build voice packs
-    configs/          dataset mix, test set, voice names, training configs
-  data-gen/           Chatterbox teacher — synthesize single-speaker data (was: swedish-chatterbox)
-  docs/               training-recipe.md (detailed), RUN1.md, PLAN.md
-  gpu_run.sh          flock wrapper — ONE compute job at a time (see Lessons)
+.                     README, LICENSE, gpu_run.sh + the import-backbone modules
+  g2p_sv.py           Swedish G2P adapter (imported everywhere)
+  nst_g2p.py          neural G2P entry (SV_NEURAL_G2P=nst_g2p)
+  synth_real.py       deployable inference (KModel + notch chain)
+  eval_renders.py     the ASR-CER + DNSMOS + comb evaluation battery
+  kokoro_symbols.py   the 178-slot sparse Kokoro vocab
+  g2p/                neural Swedish G2P model code (weights auto-download from HF)
+  configs/            all training/model configs (config_sv_*.yml) + pixi
+  scripts/            setup, convert, prepare, export, and other standalone tools
+  examples/           download the published voices from HF and synthesize
+  training/           reproducible multi-speaker pipeline (loaders, train, eval)
+  data-gen/           Chatterbox teacher — synthesize single-speaker data
+  docs/               training-recipe.md, RUN1.md, PLAN.md
 ```
 
 ## Reproduce, end to end

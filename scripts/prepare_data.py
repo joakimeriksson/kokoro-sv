@@ -24,6 +24,7 @@ Run on the GPU box (where the data + neural G2P live):
 """
 from __future__ import annotations
 
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))  # repo root on path
 import argparse
 import csv
 import os

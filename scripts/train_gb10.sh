@@ -11,9 +11,9 @@
 #   bash train_gb10.sh female           # full Stage 1 -> Stage 2 -> voicepack
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VOICE="${1:?usage: train_gb10.sh <female|male> [--smoke]}"
-CONFIG="$ROOT/config_sv_$VOICE.yml"
+CONFIG="$ROOT/configs/config_sv_$VOICE.yml"
 DATA="$ROOT/data_$VOICE"
 ST="$ROOT/recipe/StyleTTS2"
 PY="$ROOT/recipe/.venv/bin/python"
@@ -38,7 +38,7 @@ if [ "$SMOKE" = "1" ]; then
   echo "==> smoke gate ($VOICE): 1 epoch on 50 clips — losses must be FINITE and in range"
   head -n 50 "$DATA/train_list.txt" > "$DATA/_smoke_train.txt"
   head -n 20 "$DATA/val_list.txt"   > "$DATA/_smoke_val.txt"
-  SMOKE_CFG="$ROOT/config_sv_$VOICE.smoke.yml"
+  SMOKE_CFG="$ROOT/configs/configs/config_sv_$VOICE.smoke.yml"
   sed -e 's#train_list.txt#_smoke_train.txt#' \
       -e 's#val_list.txt#_smoke_val.txt#' \
       -e 's#^epochs_1st:.*#epochs_1st: 1#' \

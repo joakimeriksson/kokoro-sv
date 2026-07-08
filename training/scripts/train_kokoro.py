@@ -88,7 +88,7 @@ def main():
     print(f"filelists -> {ddir} ({len(train)} train / {len(val)} val)")
 
     # config from the verified v3 template, multispeaker enabled, absolute paths
-    tmpl = (SK / "config_sv_female_v3.yml").read_text()
+    tmpl = (SK / "configs" / "config_sv_female_v3.yml").read_text()
     cfg = tmpl.replace('log_dir: "../../output/sv_kokoro_female_v3"',
                        f'log_dir: "{ROOT}/outputs/checkpoints/{args.name}"')
     cfg = cfg.replace('train_data: "../../data_female_v3/train_list.txt"', f'train_data: "{ddir}/train_list.txt"')
