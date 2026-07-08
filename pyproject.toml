@@ -2,7 +2,7 @@
 name = "kokoro-sv"
 version = "0.1.0"
 description = "Swedish voices for Kokoro-82M — one line to speak, 10 named voices, neural Swedish G2P."
-readme = "README.md"
+readme = "README_pypi.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Joakim Eriksson" }]

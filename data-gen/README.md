@@ -80,7 +80,7 @@ extend later (it skips already-synthesized indices).
 `dataset/` feeds Kokoro training: `prepare_data.py --raw ../data-gen/dataset
 --speaker auto --speaker-label 0 --g2p neural --val 100`. The full run #1 story
 (training, crash, artifact diagnosis, deployable voice) is in
-[`../RUN1.md`](../RUN1.md).
+[`../docs/RUN1.md`](../docs/RUN1.md).
 
 > Note for that pipeline: the Chatterbox audio is **clean** — the echo/comb
 > artifact found in the Kokoro output is introduced by Kokoro's decoder/adversarial

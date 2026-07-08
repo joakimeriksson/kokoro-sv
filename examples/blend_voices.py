@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Blend two voicepacks into an in-between voice — voicepacks interpolate freely.
 
-    python examples/blend_voices.py --a Stina --b Signe --mix 0.5
+    python examples/blend_voices.py --a Stina --b Ebba --mix 0.5
     python examples/blend_voices.py --a Björn --b Nils --mix 0.7   # 70% Björn
 
 `mix` is the weight of voice A. This is pure tensor math (no GPU needed for the
@@ -32,7 +32,7 @@ def notch(a, sr=24000):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--a", default="Stina"); ap.add_argument("--b", default="Signe")
+    ap.add_argument("--a", default="Stina"); ap.add_argument("--b", default="Ebba")
     ap.add_argument("--mix", type=float, default=0.5, help="weight of voice A (0..1)")
     ap.add_argument("--text", default="Så här låter en blandning av två röster.")
     ap.add_argument("--out", default="blend.wav")

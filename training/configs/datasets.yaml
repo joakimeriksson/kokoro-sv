@@ -1,4 +1,4 @@
-# Dataset mix for training-manifest builds (scripts via `kokoro-se build-mix`).
+# Dataset mix for training-manifest builds (scripts via `python training/scripts/build_mix.py`).
 # Weights are fractions of the TOTAL target hours, applied per dataset manifest.
 # Start config from the project plan; own_voice stays 0 until recordings exist.
 

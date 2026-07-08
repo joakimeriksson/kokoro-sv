@@ -16,7 +16,7 @@ a clean **female** Swedish voice deployable as a fast model.
 
 ## 2. Data — Chatterbox distillation (not LibriVox)
 
-> Full data-generation story: [`../swedish-chatterbox/README.md`](../swedish-chatterbox/README.md).
+> Full data-generation story: [`../data-gen/README.md`](../data-gen/README.md).
 
 The original plan used LibriVox Swedish audio directly, but it failed: the only
 usable **female** reader is *"Jordens inre" by Otto Witt* — ~1.7 h, and in a
@@ -32,7 +32,7 @@ usable **female** reader is *"Jordens inre" by Otto Witt* — ~1.7 h, and in a
 - Chatterbox is slow (~1.5 clips/min, autoregressive); `batch_synth.py` is
   resumable to extend later.
 
-Fed into Kokoro prep via `prepare_data.py --raw ../swedish-chatterbox/dataset
+Fed into Kokoro prep via `prepare_data.py --raw ../data-gen/dataset
 --speaker auto --speaker-label 0 --g2p neural --val 100` → **1308 train / 100 val**
 (after the 1–12 s duration filter), written to `data/wavs_24k/` + StyleTTS2
 filelists. Two prep gotchas: `--speaker-label 0` must be NUMERIC (meldataset does

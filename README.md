@@ -76,7 +76,7 @@ python training/scripts/train_kokoro.py --manifest training/data/manifests/train
 python training/scripts/eval_base.py             # ASR-CER + DNSMOS + comb + prosody-responsiveness
 
 # 4. build a HuggingFace voice pack from chosen speakers
-python training/scripts/build_hf_pack.py "Signe,Astrid,…,Björn,Sven,…"
+python training/scripts/build_hf_pack.py "Alice,Ebba,Greta,Stina,Elsa,Björn,Lars,Nils,Anton,Oskar"
 ```
 
 Alternatively, `data-gen/` synthesizes a clean single-speaker corpus with
