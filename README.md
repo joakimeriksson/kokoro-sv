@@ -1,4 +1,4 @@
-# swedish-kokoro
+# kokoro-sv
 
 Train a **native Swedish voice for [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M)**
 (StyleTTS2 architecture) — from raw data to a fast, deployable multi-speaker model
