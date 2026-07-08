@@ -11,7 +11,7 @@ recipe/
 models/
 
 # g2p/ holds the vendored neural-G2P CODE (tracked); its big runtime artifacts
-# auto-download from HF (Joakim/swedish-kokoro under g2p/) — keep those out of git.
+# auto-download from HF (Joakim/kokoro-sv-g2p under g2p/) — keep those out of git.
 g2p/g2p_model.pt
 g2p/g2p_model_snapshot.pt
 g2p/lexicon.tsv

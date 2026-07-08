@@ -64,9 +64,9 @@ import json, numpy as np, onnxruntime as ort
 from huggingface_hub import hf_hub_download
 from misaki import espeak  # Swedish G2P (espeak 'sv')
 
-sess  = ort.InferenceSession(hf_hub_download("Joakim/swedish-kokoro", "kokoro_sv.onnx"))
+sess  = ort.InferenceSession(hf_hub_download("Joakim/kokoro-sv-g2p", "kokoro_sv.onnx"))
 voice = ...  # load sv_female.pt -> [510,1,256] numpy
-vocab = json.load(open(hf_hub_download("Joakim/swedish-kokoro", "config.json")))["vocab"]
+vocab = json.load(open(hf_hub_download("Joakim/kokoro-sv-g2p", "config.json")))["vocab"]
 ipa, _ = espeak.EspeakG2P(language="sv")("Hej världen!")
 ids = [vocab[p] for p in ipa if p in vocab]
 audio, pred_dur = sess.run(None, {"input_ids": np.array([[0,*ids,0]], np.int64),

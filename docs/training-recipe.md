@@ -19,7 +19,7 @@ checkpoints are `.gitignore`d and fetched/regenerated on demand:
 | what | how |
 |---|---|
 | base Kokoro-82M weights + kikiri recipe + PL-BERT | `bash setup_3090.sh` |
-| neural Swedish G2P model + lexicon | auto-downloads from HF `Joakim/swedish-kokoro` |
+| neural Swedish G2P model + lexicon | auto-downloads from HF `Joakim/kokoro-sv-g2p` |
 | training data (NST, LibriVox) | streamed from HF `KTH/nst` / `datadriven-company/TTS-Swedish` by the prepare scripts |
 | synthetic data (Chatterbox) | `../data-gen/batch_synth.py` regenerates it |
 | trained voices | published to HF (see model cards) |

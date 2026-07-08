@@ -1,8 +1,8 @@
 """Adapter: expose the (now vendored) Swedish neural G2P as `phonemize(text) -> str`.
 
-The G2P inference CODE lives in `swedish-kokoro/g2p/` (g2p_infer.py + model.py).
+The G2P inference CODE lives in `kokoro-sv/g2p/` (g2p_infer.py + model.py).
 The large runtime artifacts — `g2p_model.pt` (22 MB) and `lexicon.tsv` (37 MB) —
-are NOT in git; they auto-download from HuggingFace (`Joakim/swedish-kokoro` under
+are NOT in git; they auto-download from HuggingFace (`Joakim/kokoro-sv-g2p` under
 `g2p/`) and are cached, unless present locally in `g2p/`.
 
 The neural `SwedishG2P` is hybrid NST-lexicon + neural fallback and returns
@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parent
 G2P_DIR = Path(os.environ.get("SV_G2P_DIR", ROOT / "g2p"))
 sys.path.insert(0, str(G2P_DIR))
 
-HF_REPO = os.environ.get("KOKORO_SV_REPO", "Joakim/swedish-kokoro")
+HF_REPO = os.environ.get("KOKORO_SV_REPO", "Joakim/kokoro-sv-g2p")
 
 _inst = None
 

@@ -27,7 +27,7 @@ python examples/blend_voices.py --a Björn --b Nils --mix 0.7
 | what | source |
 |---|---|
 | Swedish model + 10 voices + config | HF `Joakim/kokoro-sv-voices` |
-| neural Swedish G2P (model + lexicon) | HF `Joakim/swedish-kokoro`, auto-downloaded |
+| neural Swedish G2P (model + lexicon) | HF `Joakim/kokoro-sv-g2p`, auto-downloaded |
 | model architecture | `hexgrad/Kokoro-82M` (class only; our weights override) |
 
 ## Notes

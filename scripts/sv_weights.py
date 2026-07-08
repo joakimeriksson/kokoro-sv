@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 DEPLOY = ROOT / "deploy"
 # EDIT this default (or set $KOKORO_SV_REPO) to your uploaded repo:
-HF_REPO = os.environ.get("KOKORO_SV_REPO", "Joakim/swedish-kokoro")
+HF_REPO = os.environ.get("KOKORO_SV_REPO", "Joakim/kokoro-sv-g2p")
 
 
 def resolve(filename: str) -> str:
