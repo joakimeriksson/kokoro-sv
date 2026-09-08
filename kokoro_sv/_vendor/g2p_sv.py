@@ -65,6 +65,37 @@ def _apply_fixes(phonemes: str) -> str:
     return phonemes
 
 
+# --- Numbers -----------------------------------------------------------------
+# Neither backend handles digits: espeak-sv reads them in a mix of languages and
+# the neural NST model has never seen one, so "A1, A2" came out as "bæbe, se" with
+# every number silently dropped (Greta, Sep 2026). Spell them out in Swedish
+# before phonemization. Letter+digit combos get a space so the letter is kept.
+_LETTER_DIGIT = re.compile(r"(?<=[A-Za-zÅÄÖåäö])(?=\d)")
+_DIGIT_LETTER = re.compile(r"(?<=\d)(?=[A-Za-zÅÄÖåäö])")
+_NUMBER = re.compile(r"\d+(?:[,.]\d+)?")
+
+
+def normalize_numbers(text: str) -> str:
+    """Spell digits out in Swedish: 'A1' -> 'A ett', 'O0' -> 'O noll',
+    '1.3' -> 'ett komma tre', '4000' -> 'fyratusen'."""
+    try:
+        from num2words import num2words
+    except ImportError:  # pragma: no cover - num2words is a declared dependency
+        return text
+
+    def words(m: re.Match[str]) -> str:
+        token = m.group(0)
+        if "," in token or "." in token:
+            whole, _sep, frac = re.split(r"([,.])", token, maxsplit=1)
+            return (num2words(int(whole), lang="sv") + " komma "
+                    + " ".join(num2words(int(d), lang="sv") for d in frac))
+        return num2words(int(token), lang="sv")
+
+    text = _LETTER_DIGIT.sub(" ", text)
+    text = _DIGIT_LETTER.sub(" ", text)
+    return _NUMBER.sub(words, text)
+
+
 class SwedishG2P:
     """Pluggable Swedish G2P. Prefers the NST neural G2P, falls back to espeak."""
 
@@ -142,7 +173,7 @@ class SwedishG2P:
 
     # --- public API -------------------------------------------------------
     def __call__(self, text: str) -> str:
-        ph = self._fn(text)
+        ph = self._fn(normalize_numbers(text))
         ph = _apply_fixes(ph)  # word-level lexicon corrections (okej, oss, ...)
         ph = _apply_remap(ph, self.remap)
         # collapse whitespace; Kokoro expects single spaces between tokens

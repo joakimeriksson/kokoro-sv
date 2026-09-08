@@ -1,6 +1,6 @@
 [project]
 name = "kokoro-sv"
-version = "0.1.1"
+version = "0.1.2"
 description = "Swedish voices for Kokoro-82M — one line to speak, 10 named voices, neural Swedish G2P."
 readme = "README_pypi.md"
 requires-python = ">=3.10"
@@ -19,6 +19,7 @@ dependencies = [
     "numpy",
     "scipy",
     "soundfile",
+    "num2words",   # digits -> Swedish words before g2p (neither backend reads digits)
 ]
 
 [project.urls]
