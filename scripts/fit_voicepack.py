@@ -270,8 +270,11 @@ def main() -> None:
             history.append(ev)
             torch.save(pack.clone(), os.path.join(args.out, f"step{step:04d}.pt"))
             log(f"eval step {step}: {ev}")
-            # pick on the INDEPENDENT x-vector score, among fits that stay intelligible
-            if ev["cer"] <= base_eval["cer"] + 0.05 and (best is None or ev["xvect"] > best["xvect"]):
+            # Pick on the INDEPENDENT x-vector score, traded against intelligibility:
+            # late steps gain ~0.001 x-vector (noise) while CER can triple. Score =
+            # xvect - 0.1 * CER, among fits within the intelligibility guard.
+            ev["score"] = ev["xvect"] - 0.1 * ev["cer"]
+            if ev["cer"] <= base_eval["cer"] + 0.05 and (best is None or ev["score"] > best["score"]):
                 best = ev
     json.dump({"names": names, "history": history, "best": best,
                "target_ceiling": {"ecapa": ceil_e, "xvect": ceil_x}},
