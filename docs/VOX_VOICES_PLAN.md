@@ -91,8 +91,11 @@ any future Swedish training. Re-run the measurement afterwards (script:
 7. **Build the pack**: `training/scripts/build_hf_pack.py` with the ten existing
    names plus two new ones; upload to `Joakim/kokoro-sv-voices` after Joakim
    approves by ear. Add names to `face/languages.toml` `tts_voices` in mcp-agents.
-8. **Voice server**: implement the base-weights routing for non-Swedish
-   languages (see Forgetting) before or together with the new model.
+8. **Voice server**: DONE 15 Oct (kokoro-voice-server `--other-langs-weights base`,
+   default). Non-Swedish languages now run on original Kokoro-82M weights; measured
+   end to end: en/fr/it CER 0.000/0.007/0.000, heard-as 0.97-0.99, latency
+   unchanged (~0.26 s). Swedish training can no longer degrade them, so
+   rehearsal data in step 5 is optional (only needed for a single-model deploy).
 
 ## Open items
 
