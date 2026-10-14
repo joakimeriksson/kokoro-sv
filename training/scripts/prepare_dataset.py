@@ -3,6 +3,8 @@
 Supported:
   nst     — streams HuggingFace KTH/nst parquet (no 44 GB download; column-
             projected reads, same approach as the swedish-kokoro audition)
+  speakers_csv — local synthesized dataset (wavs/ + speakers.csv), e.g. the
+            VoxCPM2 distillation sets from data-gen/batch_voxcpm.py
   css10   — local CSS10 Swedish directory (download the sv zip from Kaggle:
             https://www.kaggle.com/datasets/bryanpark/swedish-single-speaker-speech-dataset
             and unzip into data/raw/css10_sv/)
@@ -177,9 +179,38 @@ def prepare_css10(raw: Path, out: Path, max_hours: float) -> list[ManifestEntry]
     return entries
 
 
+def prepare_speakers_csv(raw: Path, out: Path, max_hours: float, speaker: str | None = None,
+                         dataset: str = "vox") -> list[ManifestEntry]:
+    """A local synthesized dataset: <raw>/wavs/*.wav + <raw>/speakers.csv
+    (audio|text|speaker_id|duration|dnsmos), as written by data-gen/batch_synth.py
+    (Chatterbox) and data-gen/batch_voxcpm.py (VoxCPM2). One speaker per dataset."""
+    import csv
+    entries, hours = [], 0.0
+    with (raw / "speakers.csv").open(encoding="utf-8") as f:
+        for row in csv.DictReader(f, delimiter="|"):
+            if hours >= max_hours:
+                break
+            x, sr = sf.read(str(raw / row["audio"]), dtype="float32")
+            if x.ndim > 1:
+                x = x.mean(axis=1)
+            if cheap_gates(x, sr):
+                continue
+            norm = normalize_text_sv(row["text"])
+            if len(norm) < 8:
+                continue
+            spk = speaker or row["speaker_id"]
+            wav = out / "wavs" / f"{spk}_{len(entries):06d}.wav"
+            dur = _write_clip(x, sr, wav)
+            entries.append(ManifestEntry(str(wav), norm, spk, dataset, round(dur, 2), TARGET_SR))
+            hours += dur / 3600
+    print(f"  {dataset}: {hours:.2f} h, speaker {speaker or '(from csv)'}", flush=True)
+    return entries
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("dataset", choices=["nst", "css10", "tts_swedish"])
+    ap.add_argument("dataset", choices=["nst", "css10", "tts_swedish", "speakers_csv"])
+    ap.add_argument("--speaker", default=None, help="speakers_csv: speaker_id override")
     ap.add_argument("--raw", default=None, help="raw dir (css10)")
     ap.add_argument("--out", default=None)
     ap.add_argument("--max-hours", type=float, default=8.0)
@@ -202,6 +233,11 @@ def main():
         entries = prepare_nst(out, args.max_hours, gender=args.gender, exclude_speakers=excl)
     elif args.dataset == "tts_swedish":
         entries = prepare_tts_swedish(out, args.max_hours)
+    elif args.dataset == "speakers_csv":
+        if not args.raw:
+            ap.error("speakers_csv needs --raw <dir with wavs/ and speakers.csv>")
+        entries = prepare_speakers_csv(Path(args.raw), out, args.max_hours, speaker=args.speaker,
+                                       dataset=name)
     else:
         entries = prepare_css10(Path(args.raw or root / "data/raw/css10_sv"), out, args.max_hours)
 

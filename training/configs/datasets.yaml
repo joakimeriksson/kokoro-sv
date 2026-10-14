@@ -11,6 +11,11 @@ mix:                 # Fas 1 lite (2026-07-07): coverage over volume
   common_voice_sv: 0.0
   rixvox: 0.0
   own_voice: 0.0
+  # VoxCPM2-distilled voices (docs/VOX_VOICES_PLAN.md). For the continued
+  # fine-tune of the Swedish base, enable these and keep a slice of nst +
+  # tts_swedish so the ten existing voices don't drift.
+  vox_female: 0.0
+  vox_male: 0.0
 
 # selection preferences inside each dataset (uses prosody fields when present)
 selection:
