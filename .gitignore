@@ -65,3 +65,6 @@ training/configs/train_*.yml
 dist/
 build/
 *.egg-info/
+
+# The VoxCPM2 reference takes ARE the voices (VoxCPM2 cannot regenerate them); keep them in git.
+!data-gen/refs/vox_*_ref.wav
