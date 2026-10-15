@@ -98,6 +98,10 @@ def main() -> None:
     ap.add_argument("--max-target", type=int, default=300)
     ap.add_argument("--w-ltas", type=float, default=0.5)
     ap.add_argument("--w-delta", type=float, default=1e-3)
+    ap.add_argument("--w-f0", type=float, default=1.0,
+                    help="weight of the pitch term: (log2 mean predicted F0 / target F0)^2; 0 = off")
+    ap.add_argument("--target-f0", type=float, default=0.0,
+                    help="target median F0 in Hz (default: measured from the target clips)")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--threads", type=int, default=8)
     args = ap.parse_args()
@@ -116,6 +120,11 @@ def main() -> None:
     for p in model.parameters():
         p.requires_grad_(False)
     fwd = type(model).forward_with_tokens.__wrapped__   # bypass @torch.no_grad
+    # Kokoro predicts its pitch curve (Hz) from the style vector; capture it
+    # (with gradient) so the fit can match pitch, not just timbre. Timbre-only
+    # fitting left the male voice ~6 semitones above the target.
+    f0_box: dict = {}
+    model.predictor.F0_proj.register_forward_hook(lambda m, i, o: f0_box.__setitem__("f0", o))
 
     sv_files = sorted(f for f in list_repo_files("Joakim/kokoro-sv-voices")
                       if f.startswith("voices/") and f.endswith(".pt"))
@@ -170,6 +179,16 @@ def main() -> None:
     t_f0 = float(np.median([median_f0(to16(f)) for f in files[:40]]))
     log(f"target: {len(files)} clips | own-centroid similarity: ecapa {ceil_e:.3f}, xvect {ceil_x:.3f} "
         f"| median F0 {t_f0:.0f} Hz")
+    if args.target_f0:
+        t_f0 = args.target_f0
+    log(f"pitch target {t_f0:.0f} Hz, weight {args.w_f0}")
+
+    def pitch_loss() -> torch.Tensor:
+        f0 = f0_box["f0"].reshape(-1)
+        voiced = f0[f0 > 50]
+        if voiced.numel() == 0:
+            return torch.zeros(())
+        return torch.log2(voiced.mean() / t_f0) ** 2
 
     # --- text -> token ids ---------------------------------------------------
     g2p = load_g2p()
@@ -252,7 +271,8 @@ def main() -> None:
             a16 = torchaudio.functional.resample(render(ids, pack), SR, 16000)
             l_spk = 1 - embed(ecapa, a16)[0] @ t_ecapa
             l_ltas = ((logmel_mean(a16) - t_ltas) ** 2).mean()
-            loss = (l_spk + args.w_ltas * l_ltas) / args.batch
+            l_f0 = pitch_loss() if args.w_f0 else torch.zeros(())
+            loss = (l_spk + args.w_ltas * l_ltas + args.w_f0 * l_f0) / args.batch
             loss.backward(retain_graph=True)
             loss_val += float(loss)
         (args.w_delta * (delta ** 2).sum()).backward()
@@ -273,7 +293,9 @@ def main() -> None:
             # Pick on the INDEPENDENT x-vector score, traded against intelligibility:
             # late steps gain ~0.001 x-vector (noise) while CER can triple. Score =
             # xvect - 0.1 * CER, among fits within the intelligibility guard.
-            ev["score"] = ev["xvect"] - 0.1 * ev["cer"]
+            semis = abs(12 * np.log2(max(ev["f0"], 1.0) / t_f0)) if ev["f0"] else 12.0
+            ev["f0_semitones_off"] = round(float(semis), 2)
+            ev["score"] = ev["xvect"] - 0.1 * ev["cer"] - 0.005 * semis
             if ev["cer"] <= base_eval["cer"] + 0.05 and (best is None or ev["score"] > best["score"]):
                 best = ev
     json.dump({"names": names, "history": history, "best": best,
