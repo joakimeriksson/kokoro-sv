@@ -103,3 +103,31 @@ any future Swedish training. Re-run the measurement afterwards (script:
 - Names for the two new voices.
 - Original 48 kHz trial WAVs on the Spark, if still there.
 - `faa19f8` in swedish-kokoro is committed locally, not pushed.
+
+## Results, night of 15 Oct 2026 (training box still unreachable)
+
+Instead of retraining, each voice's style pack was **fitted on the frozen
+Swedish model** (`scripts/fit_voicepack.py`: blend of the 64 existing packs +
+small offset, gradient through Kokoro against the target's ECAPA centroid, mean
+log-mel and — added after the first male fit came out 6 semitones high —
+Kokoro's own predicted F0). Existing voices are untouched by construction.
+
+Datasets (`scripts/verify_vox_dataset.py`, Whisper small): female kept 2259/2301
+(2.67 h), male 2256/2301 (2.67 h); median similarity to the take 0.87 / 0.88,
+median CER 0.010 / 0.012.
+
+Packs (provisional names), served via `--extra-voices data-gen/fitted_voices/extra`:
+
+| | similarity to take | pitch (take) | server-Whisper CER 1.0x / 1.3x |
+|---|---|---|---|
+| Vera (female, step 100) | 0.81 | 198 Hz (183) | 0.075 / 0.082 |
+| Viktor (male, F0 fit, step 200) | 0.74 | 116 Hz (118) | 0.097 / 0.100 |
+| Nils (existing) | 0.36 to male take | 148 Hz | 0.054 / 0.054 |
+| Greta (existing default) | 0.35 to female take | 254 Hz | 0.092 / 0.143 |
+
+The first male fit (timbre only) is kept as
+`fitted_voices/vox_male/Viktor_night.pt` (0.64, 165 Hz).
+
+Next: Joakim listens and names them; upload to `Joakim/kokoro-sv-voices`
+after approval. Full retraining (steps 3–7) remains the way to go beyond
+~0.8 similarity, and needs the training box.
