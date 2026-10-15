@@ -20,7 +20,7 @@ $PY scripts/fit_voicepack.py --target data-gen/dataset_vox_male/wavs \
 log "male fit finished: $(grep -E 'BEST|no fit' data-gen/fit_male.log | tail -1)"
 
 mkdir -p data-gen/fitted_voices/extra
-[ -f data-gen/fitted_voices/vox_female/best.pt ] && cp data-gen/fitted_voices/vox_female/best.pt data-gen/fitted_voices/extra/Vera.pt
+[ -f data-gen/fitted_voices/vox_female/best.pt ] && cp data-gen/fitted_voices/vox_female/best.pt data-gen/fitted_voices/extra/Klara.pt
 [ -f data-gen/fitted_voices/vox_male/best.pt ]   && cp data-gen/fitted_voices/vox_male/best.pt   data-gen/fitted_voices/extra/Viktor.pt
 log "packs: $(ls data-gen/fitted_voices/extra/)"
 log "DONE"

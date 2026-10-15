@@ -100,7 +100,7 @@ any future Swedish training. Re-run the measurement afterwards (script:
 ## Open items
 
 - Training box address (Spark or 3090) — needed for steps 3–7.
-- Names for the two new voices.
+- Name for the male voice (female is Klara).
 - Original 48 kHz trial WAVs on the Spark, if still there.
 - `faa19f8` in swedish-kokoro is committed locally, not pushed.
 
@@ -116,11 +116,11 @@ Datasets (`scripts/verify_vox_dataset.py`, Whisper small): female kept 2259/2301
 (2.67 h), male 2256/2301 (2.67 h); median similarity to the take 0.87 / 0.88,
 median CER 0.010 / 0.012.
 
-Packs (provisional names), served via `--extra-voices data-gen/fitted_voices/extra`:
+Packs (female named Klara by Joakim 15 Oct; male name provisional), served via `--extra-voices data-gen/fitted_voices/extra`:
 
 | | similarity to take | pitch (take) | server-Whisper CER 1.0x / 1.3x |
 |---|---|---|---|
-| Vera (female, step 100) | 0.81 | 198 Hz (183) | 0.075 / 0.082 |
+| Klara (female, step 100) | 0.81 | 198 Hz (183) | 0.075 / 0.082 |
 | Viktor (male, F0 fit, step 200) | 0.74 | 116 Hz (118) | 0.097 / 0.100 |
 | Nils (existing) | 0.36 to male take | 148 Hz | 0.054 / 0.054 |
 | Greta (existing default) | 0.35 to female take | 254 Hz | 0.092 / 0.143 |
