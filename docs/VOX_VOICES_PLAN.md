@@ -157,3 +157,12 @@ design candidates (`data-gen/design_takes.py`, `refs/male_candidates/`): #8,
 enthusiastic", ~128 Hz -> `refs/vox_male2_ref.wav`. `data-gen/male2_pipeline.sh`
 generates `dataset_vox_male2` (~95 min on the Mac), verifies it, then runs
 `at_home_viktor.sh` on that set. The old `vox_male_ref.wav` / `dataset_vox_male` are kept.
+
+### Oct 19: retrained Klara approved by ear
+Joakim: "retrained is great!" (the fitted packs: "not so great"). Klara is now
+served from her own weights: `fitted_voices/extra/Klara.pth` (e00004 export from
+`training/outputs/eval/klara/e00004/kokoro_sv.pth`) + `Klara.pt` (`vp_e00004.pt`).
+The fitted packs moved to `fitted_voices/retired/`. Viktor is served by nobody until
+his retrain (dataset_vox_male2) lands; requests for him fall back to the default voice.
+Gotcha fixed in kokoro-voice-server 5230cad: StyleTTS2 exports have "module." keys and
+parametrized weight_norm; KModel's non-strict load left the decoder random (pure noise).
