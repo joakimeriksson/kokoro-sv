@@ -131,3 +131,20 @@ The first male fit (timbre only) is kept as
 Next: Joakim listens and names them; upload to `Joakim/kokoro-sv-voices`
 after approval. Full retraining (steps 3–7) remains the way to go beyond
 ~0.8 similarity, and needs the training box.
+
+## Retraining per voice (Oct 2026)
+
+Fitted packs only move timbre; prosody lives in the shared predictor, so a fitted
+voice is as flat as the base. `training/scripts/finetune_voice.py` continues stage 2
+from the multi-speaker base on one voice's verified set -> a separate model
+(published kokoro_sv.pth and its ten voices untouched).
+
+- **Klara** (Spark, Oct 15-16, 5 epochs, 2209 clips): F0-std 6.51 -> 7.7 st (target
+  7.10), median F0 197 -> 172 Hz (target 158), CER 0.027 -> 0.023-0.025, DNSMOS
+  3.11 -> 3.41-3.48. Candidates e00003 / e00004. Not yet exported or on the laptop.
+- **Viktor**: queued. `data-gen/at_home_viktor.sh` waits for the Spark on the home
+  LAN, ships `dataset_vox_male` + `training/scripts/voice_job.sh`, and starts
+  smoke -> 5-epoch fine-tune -> eval (~4 h). Log: `finetune_viktor.log`,
+  `eval_viktor.log` on the Spark.
+- Then: export inference weights for the chosen epochs, serve each voice with its
+  own model in kokoro-voice-server, listen, decide on HF upload.
