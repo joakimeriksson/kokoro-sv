@@ -148,3 +148,12 @@ from the multi-speaker base on one voice's verified set -> a separate model
   `eval_viktor.log` on the Spark.
 - Then: export inference weights for the chosen epochs, serve each voice with its
   own model in kokoro-voice-server, listen, decide on HF upload.
+
+### Oct 19: new male take
+The first male take (~118 Hz; clips median 109 Hz) sounded too low by ear, so a
+retrain on it would inherit that. New take picked by Joakim from VoxCPM2 voice
+design candidates (`data-gen/design_takes.py`, `refs/male_candidates/`): #8,
+"A Swedish man with a youthful, slightly high-pitched voice, playful and
+enthusiastic", ~128 Hz -> `refs/vox_male2_ref.wav`. `data-gen/male2_pipeline.sh`
+generates `dataset_vox_male2` (~95 min on the Mac), verifies it, then runs
+`at_home_viktor.sh` on that set. The old `vox_male_ref.wav` / `dataset_vox_male` are kept.

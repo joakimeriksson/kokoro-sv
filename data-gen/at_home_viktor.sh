@@ -8,6 +8,7 @@
 set -uo pipefail
 SPARK="${SPARK:-joakim@192.168.101.114}"
 REMOTE=work/swedish-kokoro
+DATASET="${DATASET:-dataset_vox_male2}"
 cd "$(dirname "$0")/.."
 SSH=(ssh -o BatchMode=yes -o ConnectTimeout=8)
 
@@ -22,9 +23,9 @@ if "${SSH[@]}" "$SPARK" "pgrep -f 'voice_job.sh viktor' >/dev/null"; then
     echo "a viktor job is already running on the Spark; not starting another"; exit 0
 fi
 
-rsync -a -e "ssh -o BatchMode=yes" data-gen/dataset_vox_male/ "$SPARK:$REMOTE/data-gen/dataset_vox_male/" || exit 1
+rsync -a -e "ssh -o BatchMode=yes" data-gen/$DATASET/ "$SPARK:$REMOTE/data-gen/$DATASET/" || exit 1
 rsync -a -e "ssh -o BatchMode=yes" training/scripts/voice_job.sh "$SPARK:$REMOTE/training/scripts/" || exit 1
-"${SSH[@]}" "$SPARK" "cd $REMOTE && nohup training/scripts/voice_job.sh viktor data-gen/dataset_vox_male 5 \
+"${SSH[@]}" "$SPARK" "cd $REMOTE && nohup training/scripts/voice_job.sh viktor data-gen/$DATASET 5 \
     > finetune_viktor.log 2>&1 < /dev/null & echo launched pid \$!" || exit 1
 
 mkdir -p data-gen/fitted_voices/klara_eval
