@@ -166,3 +166,18 @@ The fitted packs moved to `fitted_voices/retired/`. Viktor is served by nobody u
 his retrain (dataset_vox_male2) lands; requests for him fall back to the default voice.
 Gotcha fixed in kokoro-voice-server 5230cad: StyleTTS2 exports have "module." keys and
 parametrized weight_norm; KModel's non-strict load left the decoder random (pure noise).
+
+### Oct 20: Viktor retrained (dataset_vox_male2, take 8)
+Spark, 5 epochs, 07:40-11:42; eval 11:45. Target clips: F0-std 6.85 st, 131 Hz.
+
+| ckpt | F0-std | F0 | CER | DNSMOS |
+|---|---|---|---|---|
+| base + pack | 5.58 | 151 | 0.024 | 3.17 |
+| e00000 | 6.90 | 143 | 0.031 | 3.41 |
+| e00001 | 7.05 | 148 | 0.025 | 3.38 |
+| e00002 | 6.64 | 150 | 0.026 | 3.40 |
+| e00003 | 6.52 | 147 | 0.023 | 3.38 |
+| e00004 | 6.72 | 149 | 0.027 | 3.36 |
+
+Served for listening: `extra/Viktor.*` = e00001 (liveliest), `extra/ViktorE5.*` = e00004
+(Klara's epoch). Pick by ear, then drop the other and publish Klara + Viktor together.
