@@ -18,6 +18,12 @@ untouched (the result is served as its own model).
 
 The dataset is the batch_voxcpm.py contract (wavs/ + speakers.csv) gated by
 scripts/verify_vox_dataset.py; only verified.csv rows with keep=1 are used.
+
+--styles DIR adds style sets (DIR/<style>/ in the same contract, e.g. from
+data-gen/styles_gen.sh), each as its own speaker id (the plain set is id 0).
+train_second.py draws a clip's style reference from the same id, so the style
+encoder learns to carry the style; a pack extracted from one style's clips then
+speaks in that style. Continue from the voice's approved checkpoint with --base.
 Needs recipe/StyleTTS2/train_second.py to honour `keep_predictor_encoder`
 (otherwise loading a stage-2 checkpoint resets predictor_encoder to a copy of
 style_encoder, and the copy is never registered with the optimizer).
@@ -64,6 +70,7 @@ def main():
     ap.add_argument("--base", default=str(BASE))
     ap.add_argument("--val", type=int, default=50)
     ap.add_argument("--epochs-2nd", type=int, default=4)
+    ap.add_argument("--styles", help="dir of style sets <style>/{wavs,verified.csv}, one speaker id each")
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--launch", action="store_true")
     args = ap.parse_args()
@@ -75,21 +82,28 @@ def main():
     vocab = kokoro_vocab()
 
     dset = Path(args.dataset).resolve()
-    rows = [r for r in csv.DictReader(open(dset / "verified.csv", encoding="utf-8"), delimiter="|")
-            if r["keep"] == "1"]
-    print(f"{len(rows)} kept clips in {dset}")
+    sets = [(dset, 0)]
+    if args.styles:
+        sdirs = sorted(d for d in Path(args.styles).resolve().iterdir() if (d / "verified.csv").exists())
+        sets += [(d, i) for i, d in enumerate(sdirs, 1)]
+        print("speaker ids: 0=plain, " + ", ".join(f"{i}={d.name}" for d, i in sets[1:]))
 
     lines, oov = [], defaultdict(int)
-    for r in rows:
-        ph = g2p(r["text"])
-        if not ph or len(ph) > 400:
-            continue
-        bad = validate_against_kokoro(ph, vocab)
-        if bad:
-            for s in bad:
-                oov[s] += 1
-            continue
-        lines.append((r["audio"], ph))
+    for sdir, spk in sets:
+        rows = [r for r in csv.DictReader(open(sdir / "verified.csv", encoding="utf-8"), delimiter="|")
+                if r["keep"] == "1"]
+        print(f"{len(rows)} kept clips in {sdir}")
+        for r in rows:
+            ph = g2p(r["text"])
+            if not ph or len(ph) > 400:
+                continue
+            bad = validate_against_kokoro(ph, vocab)
+            if bad:
+                for s in bad:
+                    oov[s] += 1
+                continue
+            # paths are relative to root_path (the plain set); style sets live beside it
+            lines.append((os.path.relpath(sdir / r["audio"], dset), ph, spk))
     if oov:
         print(f"!! dropped clips with OOV symbols: {dict(oov)}")
     print(f"{len(lines)} clips after G2P/vocab gates")
@@ -104,9 +118,9 @@ def main():
     ddir.mkdir(parents=True, exist_ok=True)
     for fname, subset in (("train_list.txt", train), ("val_list.txt", val)):
         with open(ddir / fname, "w", encoding="utf-8") as f:
-            f.writelines(f"{rel}|{ph}|0\n" for rel, ph in subset)
+            f.writelines(f"{rel}|{ph}|{spk}\n" for rel, ph, spk in subset)
     with open(ddir / "OOD_texts.txt", "w", encoding="utf-8") as f:
-        f.write("\n".join(ph for _, ph in lines) + "\n")
+        f.write("\n".join(ph for _, ph, _ in lines) + "\n")
     print(f"filelists -> {ddir} ({len(train)} train / {len(val)} val)")
 
     # config from the verified v3 template: multispeaker (style refs drive the

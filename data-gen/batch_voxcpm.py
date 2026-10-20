@@ -14,6 +14,12 @@ parentheses made the voices livelier but drifted identity (0.69-0.81), so none
 is used. Give numbers as digits ("Candytron 4000"): VoxCPM2 reads digits
 naturally but stumbles on long spelled-out compounds ("fyratusen").
 
+With --instruction it uses controllable cloning instead: reference_wav_path only
+(timbre) plus "(instruction)" before the text (style), for style sets such as
+whispering. Ultimate cloning reads an instruction aloud, so it cannot take one;
+controllable cloning drifts identity more (style_probe.py), so gate the set with
+scripts/verify_vox_dataset.py.
+
 Resumable (skips existing wavs); rewrites the manifest every 10 clips.
 
     python batch_voxcpm.py --ref refs/vox_female_ref.wav --speaker sv_vox_female \\
@@ -59,6 +65,8 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--speaker", required=True)
     ap.add_argument("--limit", type=int, default=0, help="0 = whole corpus")
+    ap.add_argument("--start", type=int, default=0, help="first corpus line to use")
+    ap.add_argument("--instruction", default="", help="style, e.g. 'whispering softly'")
     ap.add_argument("--device", default="auto", help="auto | cuda | mps | cpu")
     ap.add_argument("--steps", type=int, default=10)
     ap.add_argument("--cfg", type=float, default=2.0)
@@ -69,6 +77,7 @@ def main() -> None:
     from voxcpm import VoxCPM
 
     lines = [l.strip() for l in open(args.corpus, encoding="utf-8") if l.strip()]
+    lines = lines[args.start:]
     if args.limit:
         lines = lines[: args.limit]
     wavs_dir = os.path.join(args.out, "wavs")
@@ -96,9 +105,13 @@ def main() -> None:
             dur = sf.info(path).duration
         else:
             try:
-                wav = model.generate(text=text, reference_wav_path=args.ref,
-                                     prompt_wav_path=args.ref, prompt_text=args.prompt_text,
-                                     cfg_value=args.cfg, inference_timesteps=args.steps)
+                if args.instruction:
+                    wav = model.generate(text=f"({args.instruction}){text}", reference_wav_path=args.ref,
+                                         cfg_value=args.cfg, inference_timesteps=args.steps)
+                else:
+                    wav = model.generate(text=text, reference_wav_path=args.ref,
+                                         prompt_wav_path=args.ref, prompt_text=args.prompt_text,
+                                         cfg_value=args.cfg, inference_timesteps=args.steps)
             except Exception as e:  # noqa: BLE001
                 print(f"skip {wid}: {e}", flush=True)
                 continue
