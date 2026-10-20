@@ -54,11 +54,17 @@ def main():
     ids = [i for i in (model.vocab.get(p) for p in ipa) if i is not None]
     toks = torch.LongTensor([[0] + ids + [0]]).to(device)
 
+    # Klara and Viktor have their own weights, named in voices_manifest.json
+    manifest = json.loads(Path(hf_hub_download(VOICES_REPO, "voices_manifest.json")).read_text("utf-8"))
     for name in voices:
         vp = torch.load(hf_hub_download(VOICES_REPO, f"voices/{name}.pt"),
                         map_location=device, weights_only=True)
+        m = model
+        if manifest.get(name, {}).get("model"):
+            m = KModel(repo_id="hexgrad/Kokoro-82M", config=hf_hub_download(VOICES_REPO, "config.json"),
+                       model=hf_hub_download(VOICES_REPO, manifest[name]["model"])).to(device).eval()
         with torch.no_grad():
-            a = model.forward_with_tokens(toks, vp[len(ids) - 1].to(device), speed=1.0)[0].squeeze().cpu().numpy()
+            a = m.forward_with_tokens(toks, vp[len(ids) - 1].to(device), speed=1.0)[0].squeeze().cpu().numpy()
         sf.write(out / f"{name}.wav", notch(a), 24000)
         print(f"  {name} -> {out/name}.wav")
 

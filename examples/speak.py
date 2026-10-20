@@ -12,6 +12,7 @@ needed — just `pip install kokoro huggingface_hub torch scipy soundfile`.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -45,8 +46,10 @@ def main():
     ap.add_argument("--speed", type=float, default=1.0)
     args = ap.parse_args()
 
-    # 1. download model weights + config + the chosen voicepack from HF
-    model_path = hf_hub_download(VOICES_REPO, "kokoro_sv.pth")
+    # 1. download model weights + config + the chosen voicepack from HF.
+    #    Klara and Viktor have their own weights, named in voices_manifest.json.
+    manifest = json.loads(Path(hf_hub_download(VOICES_REPO, "voices_manifest.json")).read_text("utf-8"))
+    model_path = hf_hub_download(VOICES_REPO, manifest.get(args.voice, {}).get("model", "kokoro_sv.pth"))
     config_path = hf_hub_download(VOICES_REPO, "config.json")
     voice_path = hf_hub_download(VOICES_REPO, f"voices/{args.voice}.pt")
 
