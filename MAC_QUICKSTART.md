@@ -17,7 +17,7 @@ afplay out.wav
 Then try:
 
 ```bash
-python examples/list_voices.py                       # render all 10 voices
+python examples/list_voices.py                       # render all 12 voices
 python examples/swedish_with_french_voice.py         # Swedish words, French voice 🇫🇷
 python examples/blend_voices.py --a Björn --b Nils --mix 0.7
 ```
@@ -26,7 +26,7 @@ python examples/blend_voices.py --a Björn --b Nils --mix 0.7
 
 | what | source |
 |---|---|
-| Swedish model + 10 voices + config | HF `Joakim/kokoro-sv-voices` |
+| Swedish model + 12 voices + config | HF `Joakim/kokoro-sv-voices` |
 | neural Swedish G2P (model + lexicon) | HF `Joakim/kokoro-sv-g2p`, auto-downloaded |
 | model architecture | `hexgrad/Kokoro-82M` (class only; our weights override) |
 
@@ -35,7 +35,7 @@ python examples/blend_voices.py --a Björn --b Nils --mix 0.7
 - **No CUDA needed** — falls back to CPU; Kokoro-82M is tiny, so it's fast.
 - **`misaki` installs fine on Mac** (unlike aarch64 Linux) — plain `pip install kokoro` works.
 - If the neural G2P ever hiccups, `brew install espeak-ng` gives it a fallback.
-- Voices: **Alice, Elsa, Ebba, Stina, Greta** (female) · **Björn, Lars, Nils, Anton, Oskar** (male).
+- Voices: **Alice, Elsa, Ebba, Stina, Greta, Klara** (female) · **Björn, Lars, Nils, Anton, Oskar, Viktor** (male). Klara and Viktor load their own model automatically.
   Males are a touch soft on this v1 base (training data was female-heavy); a
   gender-balanced v2 is the planned improvement.
 

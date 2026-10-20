@@ -181,3 +181,12 @@ Spark, 5 epochs, 07:40-11:42; eval 11:45. Target clips: F0-std 6.85 st, 131 Hz.
 
 Served for listening: `extra/Viktor.*` = e00001 (liveliest), `extra/ViktorE5.*` = e00004
 (Klara's epoch). Pick by ear, then drop the other and publish Klara + Viktor together.
+
+### Oct 20: published (Viktor = e00001)
+Joakim approved the dialogue examples ("sounds quite ok"). HF `Joakim/kokoro-sv-voices`
+commit 97200c4 adds `models/Klara.pth` (e00004) and `models/Viktor.pth` (e00001), both
+converted with `scripts/convert_to_stock.py`, plus `voices/`, `samples/`, a
+`"model"` entry per voice in `voices_manifest.json`, and a README section. The ten
+existing voices and `kokoro_sv.pth` are unchanged. kokoro-voice-server a2707fb and
+`kokoro_sv/core.py` load the per-voice model from the manifest; the local `extra/` dir
+moved to `fitted_voices/retired/extra_before_hf/` (not needed any more).

@@ -67,6 +67,16 @@ class SwedishKokoro:
         model_path = hf_hub_download(voices_repo, "kokoro_sv.pth")
         config_path = hf_hub_download(voices_repo, "config.json")
         self.model = KModel(repo_id=KOKORO_BASE, config=config_path, model=model_path).to(self.device).eval()
+        self._config_path = config_path
+        # Voices fine-tuned on their own data (Klara, Viktor) ship their own
+        # weights, named by "model" in voices_manifest.json; loaded on first use.
+        try:
+            import json
+            manifest = json.loads(Path(hf_hub_download(voices_repo, "voices_manifest.json")).read_text("utf-8"))
+        except Exception:  # noqa: BLE001
+            manifest = {}
+        self._model_files = {n: i["model"] for n, i in manifest.items() if isinstance(i, dict) and i.get("model")}
+        self._models: dict[str, object] = {}
 
         # neural Swedish G2P (vendored chain: sys.path + env, model downloads from HF)
         vend = str(Path(__file__).resolve().parent / "_vendor")
@@ -91,8 +101,21 @@ class SwedishKokoro:
             self._voice_cache[name] = self._torch.load(p, map_location=self.device, weights_only=True)
         return self._voice_cache[name]
 
+    def _model_for(self, name: str):
+        """The voice's own model if it has one, else the shared kokoro_sv.pth."""
+        if name not in self._model_files:
+            return self.model
+        if name not in self._models:
+            from kokoro import KModel
+            path = self._hf(self.repo, self._model_files[name])
+            self._models[name] = KModel(repo_id=KOKORO_BASE, config=self._config_path,
+                                        model=path).to(self.device).eval()
+        return self._models[name]
+
     def blend(self, a: str, b: str, mix: float = 0.5):
-        """Interpolate two voices into a new voicepack tensor. mix = weight of `a`."""
+        """Interpolate two voices into a new voicepack tensor. mix = weight of `a`.
+        The blend runs on the shared model, so a voice with its own model (Klara,
+        Viktor) keeps only its timbre in a blend, not its prosody."""
         va, vb = self._load_voice(a), self._load_voice(b)
         return mix * va + (1 - mix) * vb
 
@@ -110,10 +133,11 @@ class SwedishKokoro:
         """Return 24 kHz float32 audio. `voice` is a name or a voicepack tensor."""
         torch = self._torch
         vp = self._load_voice(voice) if isinstance(voice, str) else voice
+        model = self._model_for(voice) if isinstance(voice, str) else self.model
         ipa = self.g2p(text).replace("ʏ", "y")
-        ids = [i for i in (self.model.vocab.get(p) for p in ipa) if i is not None]
+        ids = [i for i in (model.vocab.get(p) for p in ipa) if i is not None]
         with torch.no_grad():
-            audio = self.model.forward_with_tokens(
+            audio = model.forward_with_tokens(
                 torch.LongTensor([[0] + ids + [0]]).to(self.device),
                 vp[len(ids) - 1].to(self.device), speed=speed)[0].squeeze().cpu().numpy()
         return _notch(audio)
