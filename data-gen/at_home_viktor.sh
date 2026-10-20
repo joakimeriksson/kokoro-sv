@@ -19,7 +19,7 @@ until "${SSH[@]}" "$SPARK" true 2>/dev/null; do
 done
 echo "Spark reachable: $(date)"
 
-if "${SSH[@]}" "$SPARK" "pgrep -f 'voice_job.sh viktor' >/dev/null"; then
+if "${SSH[@]}" "$SPARK" "pgrep -f '[v]oice_job.sh viktor' >/dev/null"; then
     echo "a viktor job is already running on the Spark; not starting another"; exit 0
 fi
 

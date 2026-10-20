@@ -21,15 +21,15 @@ done
 [ -n "$PY" ] || { echo "${TAG}_JOB_EXIT no-python-with-g2p_sv"; exit 1; }
 echo "python: $PY  dataset: $DSET  epochs: $EPOCHS  start: $(date)"
 
-../gpu_run.sh "$PY" training/scripts/finetune_voice.py --dataset "$DSET" --name "$NAME" --smoke --launch
+./gpu_run.sh "$PY" training/scripts/finetune_voice.py --dataset "$DSET" --name "$NAME" --smoke --launch
 rc=$?; echo "${TAG}_SMOKE_EXIT $rc  $(date)"
 [ $rc = 0 ] || exit $rc
 
-../gpu_run.sh "$PY" training/scripts/finetune_voice.py --dataset "$DSET" --name "$NAME" \
+./gpu_run.sh "$PY" training/scripts/finetune_voice.py --dataset "$DSET" --name "$NAME" \
     --epochs-2nd "$EPOCHS" --launch
 rc=$?; echo "${TAG}_JOB_EXIT $rc  $(date)"
 [ $rc = 0 ] || exit $rc
 
-../gpu_run.sh recipe/.venv/bin/python training/scripts/eval_voice.py --dataset "$DSET" --name "$NAME" \
+./gpu_run.sh recipe/.venv/bin/python training/scripts/eval_voice.py --dataset "$DSET" --name "$NAME" \
     > "eval_${NAME}.log" 2>&1
 echo "${TAG}_EVAL_EXIT $?  $(date)"
