@@ -1,6 +1,6 @@
 # kokoro-sv — Swedish voices for Kokoro-82M
 
-Ten named Swedish voices with dynamic prosody — one line to speak. The model and
+Twelve named Swedish voices with dynamic prosody — one line to speak. The model and
 the neural Swedish G2P download from HuggingFace on first use (cached). No training,
 no local data, no CUDA required.
 
@@ -17,7 +17,7 @@ from kokoro_sv import SwedishKokoro
 
 tts = SwedishKokoro()                       # downloads model + G2P from HF (first run)
 tts.speak("Hej, jag är CandyTron!", voice="Stina", out="hej.wav")
-print(tts.voices)                           # the 10 voice names
+print(tts.voices)                           # the 12 voice names
 
 # blend two voices into an in-between one
 tts.speak("God morgon!", voice=tts.blend("Björn", "Nils", 0.7), out="mix.wav")
@@ -39,8 +39,12 @@ kokoro-sv blend "God morgon"       --a Björn --b Nils --mix 0.7 --out mix.wav
 
 ## Voices
 
-**Female:** Alice · Elsa · Ebba · Stina · Greta  
-**Male:** Björn · Lars · Nils · Anton · Oskar
+**Female:** Alice · Elsa · Ebba · Stina · Greta · Klara  
+**Male:** Björn · Lars · Nils · Anton · Oskar · Viktor
+
+Klara and Viktor each have their own fine-tuned model (livelier prosody), which
+downloads on first use (~330 MB each). Numbers are read out in Swedish
+("CandyTron 4000" → "fyratusen").
 
 Voices interpolate (`blend`) for intermediate identities and intensity. The male
 voices are a touch soft on this v1 base (a gender-balanced v2 is planned).
@@ -48,7 +52,8 @@ voices are a touch soft on this v1 base (a gender-balanced v2 is planned).
 ## Notes
 
 - **No GPU needed** — falls back to CPU; Kokoro-82M is tiny, so it's fast.
-- First run downloads ~330 MB (model + voices), cached afterward.
+- First run downloads ~330 MB (model + voices), cached afterward; Klara and Viktor
+  add ~330 MB each the first time they speak.
 - **Python 3.10+.**
 - On macOS/x86 `pip install kokoro-sv` pulls `kokoro`/`misaki` cleanly. (On aarch64
   Linux, `misaki`/`spacy` have no wheels — install with `--no-deps` and add deps manually.)
@@ -58,6 +63,7 @@ voices are a touch soft on this v1 base (a gender-balanced v2 is planned).
 Training, the reproducible multi-speaker pipeline, evaluation, and the full story:
 **https://github.com/joakimeriksson/kokoro-sv**
 
-Voices trained from CC0 data (NST + Swedish LibriVox). Built on
+Voices trained from CC0 data (NST + Swedish LibriVox); Klara and Viktor from Swedish
+speech synthesized with [VoxCPM2](https://huggingface.co/openbmb/VoxCPM2). Built on
 [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0), StyleTTS2, and
 [kikiri-tts](https://github.com/semidark/kikiri-tts). Apache-2.0.

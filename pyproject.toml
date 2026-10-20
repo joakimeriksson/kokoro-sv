@@ -1,7 +1,7 @@
 [project]
 name = "kokoro-sv"
-version = "0.1.2"
-description = "Swedish voices for Kokoro-82M — one line to speak, 10 named voices, neural Swedish G2P."
+version = "0.1.3"
+description = "Swedish voices for Kokoro-82M — one line to speak, 12 named voices, neural Swedish G2P."
 readme = "README_pypi.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
@@ -36,3 +36,7 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["kokoro_sv"]
 artifacts = ["kokoro_sv/_vendor/g2p/*.tsv"]
+
+[tool.hatch.build.targets.sdist]
+# the repo also holds datasets and checkpoints; ship only the package
+include = ["/kokoro_sv", "/README_pypi.md", "/LICENSE", "/pyproject.toml"]
