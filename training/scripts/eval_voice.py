@@ -123,7 +123,7 @@ def main():
         wavs = sorted(out.glob("test_*.wav"))
         print(f"{tag:8s} F0-std {f0_std(wavs):.2f} st  F0 {f0_median(wavs):.0f} Hz | {line}",
               flush=True)
-        for sdir in sorted(Path(args.styles).iterdir()) if args.styles else []:
+        for sdir in sorted(Path(args.styles).resolve().iterdir()) if args.styles else []:
             srows = [r for r in csv.DictReader(open(sdir / "verified.csv", encoding="utf-8"),
                                                delimiter="|") if r["keep"] == "1"]
             srefs = out_root / f"_refs_{sdir.name}"
